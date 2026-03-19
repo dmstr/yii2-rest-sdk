@@ -1,0 +1,36 @@
+{
+    "name": "dmstr/yii2-rest-sdk",
+    "description": "Yii2 extension providing typed entities, attribute mapping, and resource abstraction for consuming REST APIs via Guzzle",
+    "license": "BSD-3-Clause",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension", "rest"],
+    "authors": [
+        {
+            "name": "Elias Luhr",
+            "email": "e.luhr@herzogkommunikation.de"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "yiisoft/yii2": "^2.0",
+        "guzzlehttp/guzzle": "^7.8.1",
+        "yiisoft/yii2-authclient": "^2.2",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "dmstr\\rest\\sdk\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "dmstr\\rest\\sdk\\tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
