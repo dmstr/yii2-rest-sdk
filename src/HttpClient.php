@@ -7,6 +7,7 @@ use dmstr\rest\sdk\exceptions\ApiException;
 use dmstr\rest\sdk\exceptions\AuthenticationException;
 use dmstr\rest\sdk\exceptions\AuthorizationException;
 use dmstr\rest\sdk\exceptions\NotFoundException;
+use dmstr\rest\sdk\exceptions\RateLimitException;
 use dmstr\rest\sdk\exceptions\ServerException;
 use dmstr\rest\sdk\exceptions\ValidationException;
 use dmstr\rest\sdk\interfaces\HttpClientInterface;
@@ -180,7 +181,7 @@ abstract class HttpClient extends Component implements HttpClientInterface
     protected function handleResponse(ResponseInterface $response, string $path): array
     {
         $statusCode = $response->getStatusCode();
-        $body = json_decode($response->getBody()->getContents(), true) ?: [];
+        $body = json_decode($response->getBody()->getContents(), true) ?? [];
 
         if ($statusCode >= 200 && $statusCode < 300) {
             return $body;
@@ -205,6 +206,7 @@ abstract class HttpClient extends Component implements HttpClientInterface
             401 => new AuthenticationException($message, $statusCode, $body),
             403 => new AuthorizationException($message, $statusCode, $body),
             404 => new NotFoundException($message, $statusCode, $body),
+            429 => new RateLimitException($message, $statusCode, $body),
             500 => new ServerException($message, $statusCode, $body),
             default => new ApiException($message, $statusCode, $body),
         };
