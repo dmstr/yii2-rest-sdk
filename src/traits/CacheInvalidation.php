@@ -15,7 +15,7 @@ trait CacheInvalidation
      */
     public function getCacheKey(string $path): string
     {
-        return 'httpclient:' . md5($path);
+        return 'httpclient:' . md5(rtrim($this->baseUri, '/') . '/' . ltrim($path, '/'));
     }
 
     /**
