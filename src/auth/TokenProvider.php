@@ -7,15 +7,21 @@ use yii\base\BaseObject;
 /**
  * Configurable token provider for static API keys, service tokens, or no auth.
  *
- * - Set $token for a static token
- * - Set neither for unauthenticated requests (null token → no Authorization header)
+ * - Set $token and optionally $scheme to control the Authorization header
+ * - Omit $token for unauthenticated requests (null → no Authorization header)
  */
 class TokenProvider extends BaseObject implements AccessTokenProviderInterface
 {
     public ?string $token = null;
 
-    public function getAccessToken(): ?string
+    public string $scheme = 'Bearer';
+
+    public function getAuthorizationHeader(): ?string
     {
-        return $this->token ?: null;
+        if (empty($this->token)) {
+            return null;
+        }
+
+        return $this->scheme . ' ' . $this->token;
     }
 }

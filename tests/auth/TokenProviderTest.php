@@ -14,28 +14,34 @@ class TokenProviderTest extends TestCase
         $this->assertInstanceOf(AccessTokenProviderInterface::class, $provider);
     }
 
-    public function testReturnsStaticToken(): void
+    public function testReturnsBearerHeaderByDefault(): void
     {
         $provider = new TokenProvider(['token' => 'my-api-key']);
-        $this->assertSame('my-api-key', $provider->getAccessToken());
+        $this->assertSame('Bearer my-api-key', $provider->getAuthorizationHeader());
+    }
+
+    public function testCustomScheme(): void
+    {
+        $provider = new TokenProvider(['token' => 'my-api-key', 'scheme' => 'Basic']);
+        $this->assertSame('Basic my-api-key', $provider->getAuthorizationHeader());
     }
 
     public function testReturnsNullWhenTokenIsNull(): void
     {
         $provider = new TokenProvider();
-        $this->assertNull($provider->getAccessToken());
+        $this->assertNull($provider->getAuthorizationHeader());
     }
 
     public function testReturnsNullWhenTokenIsEmpty(): void
     {
         $provider = new TokenProvider(['token' => '']);
-        $this->assertNull($provider->getAccessToken());
+        $this->assertNull($provider->getAuthorizationHeader());
     }
 
     public function testNullAuthWhenNothingConfigured(): void
     {
         $provider = new TokenProvider();
-        $this->assertNull($provider->getAccessToken());
-        $this->assertNull($provider->getAccessToken());
+        $this->assertNull($provider->getAuthorizationHeader());
+        $this->assertNull($provider->getAuthorizationHeader());
     }
 }

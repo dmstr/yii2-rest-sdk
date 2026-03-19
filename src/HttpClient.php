@@ -92,11 +92,6 @@ abstract class HttpClient extends Component implements HttpClientInterface
         return $this->tokenProvider;
     }
 
-    protected function getAccessToken(): ?string
-    {
-        return $this->resolveTokenProvider()?->getAccessToken();
-    }
-
     protected function clientConfig(): array
     {
         return [
@@ -114,16 +109,15 @@ abstract class HttpClient extends Component implements HttpClientInterface
 
     /**
      * Merge request options with per-request auth header.
-     * Resolves the access token at request time to avoid stale tokens.
-     * Only adds Authorization header when a token is available.
+     * Only adds Authorization header when the provider returns a value.
      */
     protected function requestOptions(array $options = []): array
     {
-        $token = $this->getAccessToken();
-        if ($token !== null) {
+        $authHeader = $this->resolveTokenProvider()?->getAuthorizationHeader();
+        if ($authHeader !== null) {
             $options[RequestOptions::HEADERS] = array_merge(
                 $options[RequestOptions::HEADERS] ?? [],
-                ['Authorization' => 'Bearer ' . $token]
+                ['Authorization' => $authHeader]
             );
         }
         return $options;

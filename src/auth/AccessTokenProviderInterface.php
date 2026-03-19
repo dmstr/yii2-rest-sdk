@@ -5,7 +5,8 @@ namespace dmstr\rest\sdk\auth;
 interface AccessTokenProviderInterface
 {
     /**
-     * Returns the current access token, or null when no token is available (skips auth header).
+     * Returns the full Authorization header value (e.g. "Bearer xxx", "Basic xxx"),
+     * or null when no auth is available (skips Authorization header).
      */
-    public function getAccessToken(): ?string;
+    public function getAuthorizationHeader(): ?string;
 }
