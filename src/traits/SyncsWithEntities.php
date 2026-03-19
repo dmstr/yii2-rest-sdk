@@ -43,10 +43,7 @@ trait SyncsWithEntities
             }
 
             foreach ($mapping as $entityProp => $arAttribute) {
-                $getter = 'get' . ucfirst($entityProp);
-                if (method_exists($entity, $getter)) {
-                    $this->$arAttribute = $entity->$getter();
-                }
+                $this->$arAttribute = $entity->$entityProp;
             }
         }
     }
@@ -64,10 +61,7 @@ trait SyncsWithEntities
             }
 
             foreach ($mapping as $entityProp => $arAttribute) {
-                $setter = 'set' . ucfirst($entityProp);
-                if (method_exists($entity, $setter)) {
-                    $entity->$setter($this->$arAttribute);
-                }
+                $entity->$entityProp = $this->$arAttribute;
             }
 
             if (!$entity->upsert()) {
