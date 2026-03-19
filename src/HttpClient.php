@@ -2,6 +2,7 @@
 
 namespace dmstr\rest\sdk;
 
+use dmstr\rest\sdk\auth\AccessTokenProviderInterface;
 use dmstr\rest\sdk\exceptions\ApiException;
 use dmstr\rest\sdk\exceptions\AuthenticationException;
 use dmstr\rest\sdk\exceptions\AuthorizationException;
@@ -14,9 +15,7 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Yii;
-use yii\authclient\OpenIdConnect;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 
 abstract class HttpClient extends Component implements HttpClientInterface
 {
@@ -47,7 +46,14 @@ abstract class HttpClient extends Component implements HttpClientInterface
      */
     protected ?GuzzleClient $_client = null;
 
-    public string $authClientId = 'oauth';
+    /**
+     * Token provider for authentication.
+     * Accepts an AccessTokenProviderInterface instance or a callable that returns one.
+     * When null, requests are sent without Authorization header.
+     *
+     * @var AccessTokenProviderInterface|callable|null
+     */
+    public mixed $tokenProvider = null;
 
     public string $userAgent = 'REST/1.0';
 
@@ -64,13 +70,31 @@ abstract class HttpClient extends Component implements HttpClientInterface
         return $this->_client;
     }
 
+    /**
+     * Resolves $tokenProvider (callable invoked once, then cached) and returns the instance.
+     */
+    protected function resolveTokenProvider(): ?AccessTokenProviderInterface
+    {
+        if ($this->tokenProvider === null) {
+            return null;
+        }
+
+        if (is_callable($this->tokenProvider)) {
+            $this->tokenProvider = ($this->tokenProvider)();
+        }
+
+        if (!$this->tokenProvider instanceof AccessTokenProviderInterface) {
+            throw new \yii\base\InvalidConfigException(
+                'tokenProvider must be an AccessTokenProviderInterface instance or a callable returning one'
+            );
+        }
+
+        return $this->tokenProvider;
+    }
+
     protected function getAccessToken(): ?string
     {
-        $client = Yii::$app->authClientCollection->getClient($this->authClientId);
-        if ($client instanceof OpenIdConnect) {
-            return $client->getAccessToken()?->getToken();
-        }
-        throw new InvalidConfigException('$authClientId must be instance of ' . OpenIdConnect::class);
+        return $this->resolveTokenProvider()?->getAccessToken();
     }
 
     protected function clientConfig(): array
@@ -91,14 +115,27 @@ abstract class HttpClient extends Component implements HttpClientInterface
     /**
      * Merge request options with per-request auth header.
      * Resolves the access token at request time to avoid stale tokens.
+     * Only adds Authorization header when a token is available.
      */
     protected function requestOptions(array $options = []): array
     {
-        $options[RequestOptions::HEADERS] = array_merge(
-            $options[RequestOptions::HEADERS] ?? [],
-            ['Authorization' => 'Bearer ' . $this->getAccessToken()]
-        );
+        $token = $this->getAccessToken();
+        if ($token !== null) {
+            $options[RequestOptions::HEADERS] = array_merge(
+                $options[RequestOptions::HEADERS] ?? [],
+                ['Authorization' => 'Bearer ' . $token]
+            );
+        }
         return $options;
+    }
+
+    /**
+     * @throws ApiException
+     */
+    protected function sendRequest(string $method, string $path, array $options = []): array
+    {
+        $response = $this->getClient()->request($method, $path, $this->requestOptions($options));
+        return $this->handleResponse($response, $path);
     }
 
     public function get(string $path, array $options = []): array
@@ -114,8 +151,7 @@ abstract class HttpClient extends Component implements HttpClientInterface
             }
         }
 
-        $response = $this->getClient()->get($path, $this->requestOptions($options));
-        $data = $this->handleResponse($response, $path);
+        $data = $this->sendRequest('GET', $path, $options);
 
         // Write to cache
         if ($cache && $this->cacheDuration > 0) {
@@ -127,23 +163,18 @@ abstract class HttpClient extends Component implements HttpClientInterface
 
     public function patch(string $path, array $options): true
     {
-        $response = $this->getClient()->patch($path, $this->requestOptions($options));
-        $this->handleResponse($response, $path);
-
+        $this->sendRequest('PATCH', $path, $options);
         return true;
     }
 
     public function post(string $path, array $options): array
     {
-        $response = $this->getClient()->post($path, $this->requestOptions($options));
-        return $this->handleResponse($response, $path);
+        return $this->sendRequest('POST', $path, $options);
     }
 
     public function delete(string $path, array $options = []): true
     {
-        $response = $this->getClient()->delete($path, $this->requestOptions($options));
-        $this->handleResponse($response, $path);
-
+        $this->sendRequest('DELETE', $path, $options);
         return true;
     }
 
@@ -152,7 +183,7 @@ abstract class HttpClient extends Component implements HttpClientInterface
      *
      * @throws ApiException
      */
-    private function handleResponse(ResponseInterface $response, string $path): array
+    protected function handleResponse(ResponseInterface $response, string $path): array
     {
         $statusCode = $response->getStatusCode();
         $body = json_decode($response->getBody()->getContents(), true) ?: [];

@@ -20,7 +20,6 @@
         "php": ">=8.2",
         "yiisoft/yii2": "^2.0",
         "guzzlehttp/guzzle": "^7.8.1",
-        "yiisoft/yii2-authclient": "^2.2",
         "psr/http-message": "^2.0"
     },
     "require-dev": {

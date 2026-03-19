@@ -23,24 +23,38 @@ The SDK provides a layered architecture for working with REST APIs:
 
 ## Configuration
 
-Register your HttpClient implementation as a Yii2 application component.
+Register your HttpClient implementation as a Yii2 application component with a `tokenProvider`.
+The provider can be an `AccessTokenProviderInterface` instance or a callable that returns one.
+
+### With a callable (e.g. OpenID Connect / Keycloak)
 
 ```php
-return [
-    'components' => [
-        'blogApi' => [
-            'class' => app\components\BlogClient::class,
-            'baseUri' => getenv('API_BASE_URI'),
-            'authClientId' => 'keycloak',
-            'timeout' => 30,
-            'cacheDuration' => 300,
-        ],
-    ],
-];
+HttpClientInterface::class => [
+    'class' => app\components\BlogClient::class,
+    'baseUri' => getenv('API_BASE_URI'),
+    'tokenProvider' => function () {
+        $client = Yii::$app->authClientCollection->getClient('keycloak');
+        return Yii::createObject([
+            'class' => \dmstr\rest\sdk\auth\TokenProvider::class,
+            'token' => $client->getAccessToken()?->getToken(),
+        ]);
+    },
+    'timeout' => 30,
+],
 ```
 
-The `authClientId` references a client from `yii\authclient\Collection`. The SDK uses it
-to obtain a Bearer token via OpenID Connect for every request.
+### With a static token
+
+```php
+'tokenProvider' => [
+    'class' => \dmstr\rest\sdk\auth\TokenProvider::class,
+    'token' => 'my-api-key',
+],
+```
+
+### Without authentication
+
+Omit `tokenProvider` entirely — requests will be sent without an Authorization header.
 
 ## Usage
 
