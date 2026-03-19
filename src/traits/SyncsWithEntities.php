@@ -3,6 +3,7 @@
 namespace dmstr\rest\sdk\traits;
 
 use dmstr\rest\sdk\entities\Entity;
+use ReflectionProperty;
 
 /**
  * Trait for syncing Yii2 ActiveRecord attributes with REST SDK entities.
@@ -42,8 +43,10 @@ trait SyncsWithEntities
                 continue;
             }
 
+            $ref = new \ReflectionClass($entity);
             foreach ($mapping as $entityProp => $arAttribute) {
-                $this->$arAttribute = $entity->$entityProp;
+                $prop = $ref->getProperty($entityProp);
+                $this->$arAttribute = $prop->getValue($entity);
             }
         }
     }
@@ -60,8 +63,10 @@ trait SyncsWithEntities
                 continue;
             }
 
+            $ref = new \ReflectionClass($entity);
             foreach ($mapping as $entityProp => $arAttribute) {
-                $entity->$entityProp = $this->$arAttribute;
+                $prop = $ref->getProperty($entityProp);
+                $prop->setValue($entity, $this->$arAttribute);
             }
 
             if (!$entity->upsert()) {
