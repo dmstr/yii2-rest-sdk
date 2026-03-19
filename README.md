@@ -268,6 +268,7 @@ The HttpClient throws typed exceptions for different HTTP status codes:
 - `AuthorizationException` for 403
 - `NotFoundException` for 404
 - `ValidationException` for 422 (with field-level errors)
+- `RateLimitException` for 429
 - `ServerException` for 500
 - `ApiException` for all other error codes
 
@@ -336,6 +337,14 @@ class PostResource extends Resource
 {
     protected array $cacheInvalidationPaths = ['/posts'];
 }
+```
+
+By default the SDK uses the `cache` application component. To use a different cache component,
+set `cacheComponent` on your HttpClient:
+
+```php
+'class' => app\components\BlogClient::class,
+'cacheComponent' => 'apiCache',
 ```
 
 You can also invalidate cache entries manually:

@@ -33,7 +33,12 @@ trait CacheInvalidation
 
     private function getAvailableCache(): ?CacheInterface
     {
-        return Yii::$app->has('cache') ? Yii::$app->getCache() : null;
+        $id = $this->cacheComponent ?? 'cache';
+        if (!Yii::$app->has($id)) {
+            return null;
+        }
+        $component = Yii::$app->get($id);
+        return $component instanceof CacheInterface ? $component : null;
     }
 
     /**

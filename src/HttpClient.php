@@ -56,6 +56,11 @@ abstract class HttpClient extends Component implements HttpClientInterface
      */
     public mixed $tokenProvider = null;
 
+    /**
+     * Yii application component ID used for caching
+     */
+    public string $cacheComponent = 'cache';
+
     public string $userAgent = 'REST/1.0';
 
     /**
