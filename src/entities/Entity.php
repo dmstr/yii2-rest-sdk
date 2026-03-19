@@ -180,7 +180,6 @@ abstract class Entity implements JsonSerializable
         }
 
         $property = $this->_relationMap[$propertyName]['reflection'];
-        $property->setAccessible(true);
         return $property->getValue($this);
     }
 

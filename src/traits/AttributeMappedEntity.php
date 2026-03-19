@@ -98,8 +98,6 @@ trait AttributeMappedEntity
 
             /** @var ReflectionProperty $property */
             $property = $mapping['reflection'];
-            $property->setAccessible(true);
-
             // Type coercion based on property type
             $value = $this->coerceType($data[$apiKey], $property);
             $property->setValue($this, $value);
@@ -125,7 +123,6 @@ trait AttributeMappedEntity
 
             /** @var ReflectionProperty $property */
             $property = $mapping['reflection'];
-            $property->setAccessible(true);
 
             $relationData = $data[$expandKey];
 
@@ -173,7 +170,6 @@ trait AttributeMappedEntity
 
             /** @var ReflectionProperty $property */
             $property = $mapping['reflection'];
-            $property->setAccessible(true);
             $currentValue = $property->getValue($this);
 
             $originalValue = $originalData[$apiKey] ?? null;
