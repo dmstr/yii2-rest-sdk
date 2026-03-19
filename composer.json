@@ -1,5 +1,11 @@
 {
     "name": "dmstr/yii2-rest-sdk",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
     "description": "Yii2 extension providing typed entities, attribute mapping, and resource abstraction for consuming REST APIs via Guzzle",
     "license": "BSD-3-Clause",
     "type": "yii2-extension",
@@ -32,5 +38,10 @@
     },
     "scripts": {
         "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true
+        }
     }
 }
