@@ -333,9 +333,11 @@ and `cacheDuration` is greater than 0. Cache keys include both the request path 
 parameters, so requests to the same endpoint with different parameters (e.g. `?expand=comments`
 vs. no expand) are cached independently.
 
-Mutating operations (POST, PATCH, DELETE) in resources can invalidate related cache entries
-through the `$cacheInvalidationPaths` property. Invalidation uses Yii2's `TagDependency` to
-clear **all** parameter variants of a path at once.
+Mutating operations (POST, PATCH, DELETE) automatically invalidate the cache for the
+request path. Cache entries are tagged hierarchically, so invalidating a parent path
+(e.g. `/posts`) also clears all child entries (e.g. `/posts/1`).
+
+Resources can define additional paths to invalidate via `$cacheInvalidationPaths`:
 
 ```php
 class PostResource extends Resource

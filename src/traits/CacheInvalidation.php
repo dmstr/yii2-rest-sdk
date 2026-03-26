@@ -33,6 +33,23 @@ trait CacheInvalidation
     }
 
     /**
+     * Generate hierarchical cache tags for a path.
+     * Returns tags for the path and all parent paths, so invalidating
+     * a parent (e.g. /person) also clears children (e.g. /person/123).
+     */
+    public function getCacheTags(string $path): array
+    {
+        $segments = explode('/', trim($path, '/'));
+        $tags = [];
+        $current = '';
+        foreach ($segments as $segment) {
+            $current .= ($current ? '/' : '') . $segment;
+            $tags[] = $this->getCacheTag($current);
+        }
+        return $tags;
+    }
+
+    /**
      * Invalidate all cached variants for a specific path
      */
     public function invalidateCache(string $path): bool

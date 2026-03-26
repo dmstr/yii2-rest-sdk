@@ -158,7 +158,7 @@ abstract class HttpClient extends Component implements HttpClientInterface
                 $cacheKey,
                 $data,
                 $this->cacheDuration,
-                new TagDependency(['tags' => [$this->getCacheTag($path)]])
+                new TagDependency(['tags' => $this->getCacheTags($path)])
             );
         }
 
@@ -168,17 +168,21 @@ abstract class HttpClient extends Component implements HttpClientInterface
     public function patch(string $path, array $options): true
     {
         $this->sendRequest('PATCH', $path, $options);
+        $this->invalidateCache($path);
         return true;
     }
 
     public function post(string $path, array $options): array
     {
-        return $this->sendRequest('POST', $path, $options);
+        $data = $this->sendRequest('POST', $path, $options);
+        $this->invalidateCache($path);
+        return $data;
     }
 
     public function delete(string $path, array $options = []): true
     {
         $this->sendRequest('DELETE', $path, $options);
+        $this->invalidateCache($path);
         return true;
     }
 
