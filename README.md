@@ -329,8 +329,13 @@ using the same mapping, so form validation messages display correctly.
 ### Caching
 
 GET requests are cached automatically when a `cache` application component is available
-and `cacheDuration` is greater than 0. Mutating operations (POST, PATCH, DELETE) in resources
-can invalidate related cache entries through the `$cacheInvalidationPaths` property.
+and `cacheDuration` is greater than 0. Cache keys include both the request path and query
+parameters, so requests to the same endpoint with different parameters (e.g. `?expand=comments`
+vs. no expand) are cached independently.
+
+Mutating operations (POST, PATCH, DELETE) in resources can invalidate related cache entries
+through the `$cacheInvalidationPaths` property. Invalidation uses Yii2's `TagDependency` to
+clear **all** parameter variants of a path at once.
 
 ```php
 class PostResource extends Resource

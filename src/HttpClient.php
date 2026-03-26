@@ -17,6 +17,7 @@ use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Yii;
 use yii\base\Component;
+use yii\caching\TagDependency;
 
 abstract class HttpClient extends Component implements HttpClientInterface
 {
@@ -140,9 +141,8 @@ abstract class HttpClient extends Component implements HttpClientInterface
 
     public function get(string $path, array $options = []): array
     {
-        // Check cache first
-        $cacheKey = $this->getCacheKey($path);
         $cache = $this->getAvailableCache();
+        $cacheKey = $this->getCacheKey($path, $options);
 
         if ($cache && $this->cacheDuration > 0) {
             $cached = $cache->get($cacheKey);
@@ -153,9 +153,13 @@ abstract class HttpClient extends Component implements HttpClientInterface
 
         $data = $this->sendRequest('GET', $path, $options);
 
-        // Write to cache
         if ($cache && $this->cacheDuration > 0) {
-            $cache->set($cacheKey, $data, $this->cacheDuration);
+            $cache->set(
+                $cacheKey,
+                $data,
+                $this->cacheDuration,
+                new TagDependency(['tags' => [$this->getCacheTag($path)]])
+            );
         }
 
         return $data;

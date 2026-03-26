@@ -4,6 +4,7 @@ namespace dmstr\rest\sdk\traits;
 
 use Yii;
 use yii\caching\CacheInterface;
+use yii\caching\TagDependency;
 
 /**
  * Trait providing cache key management and invalidation helpers
@@ -11,15 +12,28 @@ use yii\caching\CacheInterface;
 trait CacheInvalidation
 {
     /**
-     * Generate cache key for a given path
+     * Generate cache key for a given path and options.
+     * Options (e.g. query parameters) are included so that different
+     * parameter combinations produce distinct cache entries.
      */
-    public function getCacheKey(string $path): string
+    public function getCacheKey(string $path, array $options = []): string
     {
-        return 'httpclient:' . md5(rtrim($this->baseUri, '/') . '/' . ltrim($path, '/'));
+        $normalized = rtrim($this->baseUri, '/') . '/' . ltrim($path, '/');
+        return 'httpclient:' . md5($normalized . serialize($options));
     }
 
     /**
-     * Invalidate cache for a specific path
+     * Generate a cache tag for a given path (ignoring options).
+     * Used to group all parameter variants of the same endpoint
+     * so they can be invalidated together.
+     */
+    public function getCacheTag(string $path): string
+    {
+        return 'httpclient:tag:' . md5(rtrim($this->baseUri, '/') . '/' . ltrim($path, '/'));
+    }
+
+    /**
+     * Invalidate all cached variants for a specific path
      */
     public function invalidateCache(string $path): bool
     {
@@ -27,8 +41,8 @@ trait CacheInvalidation
         if ($cache === null) {
             return false;
         }
-        $cacheKey = $this->getCacheKey($path);
-        return $cache->delete($cacheKey);
+        TagDependency::invalidate($cache, [$this->getCacheTag($path)]);
+        return true;
     }
 
     private function getAvailableCache(): ?CacheInterface
@@ -42,8 +56,8 @@ trait CacheInvalidation
     }
 
     /**
-     * Invalidate cache by pattern (multiple paths)
-     * For simple cases, just invalidate specific known paths
+     * Invalidate cache for multiple paths at once.
+     * Clears all parameter variants for each path.
      */
     public function invalidateCachePattern(array $paths): bool
     {
@@ -51,13 +65,8 @@ trait CacheInvalidation
         if ($cache === null) {
             return false;
         }
-        $success = true;
-
-        foreach ($paths as $path) {
-            $cacheKey = $this->getCacheKey($path);
-            $success = $cache->delete($cacheKey) && $success;
-        }
-
-        return $success;
+        $tags = array_map(fn(string $path) => $this->getCacheTag($path), $paths);
+        TagDependency::invalidate($cache, $tags);
+        return true;
     }
 }
