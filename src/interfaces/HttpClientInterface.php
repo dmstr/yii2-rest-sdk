@@ -12,5 +12,7 @@ interface HttpClientInterface
 
     public function delete(string $path, array $options = []): true;
 
+    public function invalidateCache(string $path): bool;
+
     public function invalidateCachePattern(array $paths): bool;
 }
