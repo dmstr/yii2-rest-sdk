@@ -3,7 +3,6 @@
 namespace dmstr\rest\sdk\traits;
 
 use dmstr\rest\sdk\entities\Entity;
-use ReflectionProperty;
 
 /**
  * Trait for syncing Yii2 ActiveRecord attributes with REST SDK entities.
